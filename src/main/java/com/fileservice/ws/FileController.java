@@ -10,13 +10,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
@@ -25,15 +21,33 @@ public class FileController {
 
 	@Autowired
 	private FileStorageService fileStorageService;
-	
+	@GetMapping("/upload")
+	public ModelAndView directToFile(){
+		System.out.println("get ne");
+		return new ModelAndView("/home");
+	}
 	@PutMapping
 	public ResponseEntity<FileResponse> uploadFile(@RequestParam("file") MultipartFile file){
+		System.out.println("put ne");
 		String fileName = fileStorageService.storeFile(file);
 		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
 				.path("/files/")
 				.path(fileName)
 				.toUriString();
 		
+		FileResponse fileResponse = new FileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
+		return new ResponseEntity<FileResponse>(fileResponse,HttpStatus.OK);
+	}
+	@CrossOrigin(origins = "*")
+	@PostMapping
+	public ResponseEntity<FileResponse> uploadFilePost(@RequestParam("file") MultipartFile file){
+		System.out.println("post ne");
+		String fileName = fileStorageService.storeFile(file);
+		String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+				.path("/files/")
+				.path(fileName)
+				.toUriString();
+
 		FileResponse fileResponse = new FileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
 		return new ResponseEntity<FileResponse>(fileResponse,HttpStatus.OK);
 	}
@@ -59,5 +73,4 @@ public class FileController {
 				.contentType(MediaType.parseMediaType(contentType))
 				.body(resource);
 	}
-	
 }
