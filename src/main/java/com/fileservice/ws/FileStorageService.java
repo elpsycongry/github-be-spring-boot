@@ -1,13 +1,8 @@
 package com.fileservice.ws;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-
-
+import com.fileservice.ws.model.Video;
+import com.fileservice.ws.repository.IUserRepository;
+import com.fileservice.ws.repository.IVideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -15,15 +10,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 public class FileStorageService {
 
 	private final Path fileStorageLocation;
-	
+	@Autowired
+	private IVideoRepository videoRepository;
+	@Autowired
+	private IUserRepository userRepository;
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
 		this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
-		
+		System.out.println(fileStorageProperties);
+
 		try {
 			Files.createDirectories(this.fileStorageLocation);
 			
@@ -35,12 +43,11 @@ public class FileStorageService {
 	
 //	function to store the file
 	public String storeFile(MultipartFile file) {
-		
 		String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+		System.out.println(LocalDateTime.now());
 		try {
 			Path targetLocation = this.fileStorageLocation.resolve(fileName);
 			Files.copy(file.getInputStream(), targetLocation,StandardCopyOption.REPLACE_EXISTING);
-			
 			return fileName;
 		}catch(IOException ex) {
 			throw new FileStorageException("Could not store file"+fileName + ". Please try again!",ex);
@@ -61,5 +68,16 @@ public class FileStorageService {
 		}catch(MalformedURLException ex) {
 			throw new MyFileNotFoundException("File not found " + fileName);
 		}
+	}
+
+	public void storeFileToDatabase(FileResponse fileResponse, Long userId){
+		Video video = new Video();
+		video.setUri(fileResponse.getFileDownloadUri());
+		video.setFileName(fileResponse.getFilename());
+		video.setUser(userRepository.findById(userId).get());
+		videoRepository.save(video);
+	}
+	public List<String> getAllVideoUri() {
+		return videoRepository.findAllUri();
 	}
 }
