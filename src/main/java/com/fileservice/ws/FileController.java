@@ -1,6 +1,9 @@
 package com.fileservice.ws;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -24,6 +27,7 @@ public class FileController {
 
 	@GetMapping("/upload")
 	public ModelAndView directToFile(){
+		System.out.println(LocalDateTime.now());
 		System.out.println("get ne");
 		return new ModelAndView("/home");
 	}
@@ -37,8 +41,8 @@ public class FileController {
 				.path(fileName)
 				.toUriString();
 		FileResponse fileResponse = new FileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
-
-		fileStorageService.storeFileToDatabase(fileResponse, id);
+		System.out.println(LocalDateTime.now());
+		fileStorageService.storeFileToDatabase(fileResponse, id, LocalDate.now());
 		return new ResponseEntity<FileResponse>(fileResponse,HttpStatus.OK);
 	}
 	@GetMapping("")
@@ -46,6 +50,20 @@ public class FileController {
 		List<String> list = fileStorageService.getAllVideoUri();
 		return new ResponseEntity<List<String>>(list, HttpStatus.OK);
 	}
+	@GetMapping("/api/v1/create-video-counter")
+	public ResponseEntity<Integer> getAllVideoUri(@RequestParam("userID") Long id){
+		List<LocalDate> list = fileStorageService.getCreateTimeVideoByUser(id);
+		System.out.println(list);
+		Integer timesLeft = 0;
+		for (LocalDate timeCreate:
+			 list) {
+			if (timeCreate.getDayOfMonth() == LocalDate.now().getDayOfMonth()){
+				timesLeft++;
+			}
+		}
+		return new ResponseEntity<Integer>(timesLeft, HttpStatus.OK);
+	}
+
 	
 	@GetMapping("/{fileName:.+}")
 	public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request){

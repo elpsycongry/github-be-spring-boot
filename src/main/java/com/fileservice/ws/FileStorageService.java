@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class FileStorageService {
 //	function to store the file
 	public String storeFile(MultipartFile file) {
 		String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-		System.out.println(LocalDateTime.now());
+
 		try {
 			Path targetLocation = this.fileStorageLocation.resolve(fileName);
 			Files.copy(file.getInputStream(), targetLocation,StandardCopyOption.REPLACE_EXISTING);
@@ -70,14 +71,19 @@ public class FileStorageService {
 		}
 	}
 
-	public void storeFileToDatabase(FileResponse fileResponse, Long userId){
+	public void storeFileToDatabase(FileResponse fileResponse, Long userId, LocalDate time){
 		Video video = new Video();
 		video.setUri(fileResponse.getFileDownloadUri());
 		video.setFileName(fileResponse.getFilename());
 		video.setUser(userRepository.findById(userId).get());
+		video.setTimeCreate(time);
 		videoRepository.save(video);
 	}
 	public List<String> getAllVideoUri() {
 		return videoRepository.findAllUri();
+	}
+	public List<LocalDate> getCreateTimeVideoByUser(Long userId) {
+
+		return videoRepository.findAddVideoTimeByUserID(userRepository.findById(userId).get());
 	}
 }

@@ -2,6 +2,9 @@ package com.fileservice.ws.model;
 
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "video")
 public class Video {
@@ -10,6 +13,15 @@ public class Video {
     private Long id;
     private String uri;
     private String fileName;
+    private LocalDate timeCreate;
+    public LocalDate getTimeCreate() {
+        return timeCreate;
+    }
+
+    public void setTimeCreate(LocalDate timeCreate) {
+        this.timeCreate = timeCreate;
+    }
+
     public String getFileName() {
         return fileName;
     }
